@@ -155,6 +155,8 @@ int getToken(Evaluator *eval, Token *token, ReadBuf *readBuf)
         case '^':   TOKEN_OP(POW);    return EXIT_SUCCESS;
 
         case '=':   TOKEN_OP(ASSIGN); return EXIT_SUCCESS;
+        case '<':   TOKEN_OP(BELOW);  return EXIT_SUCCESS;
+        case '>':   TOKEN_OP(ABOVE);  return EXIT_SUCCESS;
 
 
         case '(':   TOKEN_OP(L_BRACKET); return EXIT_SUCCESS;
@@ -297,6 +299,7 @@ ExpTreeOperators getWordOperator(const char *word)
     else if (strcmp(word, "cos") == 0) return COS;
     else if (strcmp(word, "log") == 0) return LOGAR;
     else if (strcmp(word, "ln")  == 0) return LN;
+    else if (strcmp(word, "if")  == 0) return IF;
 
     return NOT_OPER;
 }
@@ -350,7 +353,7 @@ Node *getG(Evaluator *eval, const char *str)
 
     int arrPosition = 0;
 
-    Node *val = getA(tokenArray, &arrPosition);
+    Node *val = getOp(tokenArray, &arrPosition);
 
     syntax_assert(tokenArray[arrPosition].type == EXP_TREE_NOTHING);
     return val;
@@ -367,6 +370,48 @@ Node *getG(Evaluator *eval, const char *str)
 #define TOKEN_PRIORITY_IS(oper)\
     (expTreeOperatorPriority(curToken->data.operatorNum) == oper)
 
+
+Node *getOp(Token *tokenArray, int *arrPosition)
+{
+    assert(tokenArray);
+    assert(arrPosition);
+
+    Node *val = NULL;
+
+    val = getIf(tokenArray, arrPosition);
+    if (val) return val;
+
+    val = getA(tokenArray, arrPosition);
+    if (val) return val;
+
+    syntaxError(tokenArray + *arrPosition, *arrPosition);
+    return PtrPoison;
+}
+
+Node *getIf(Token *tokenArray, int *arrPosition)
+{
+    assert(tokenArray);
+    assert(arrPosition);
+
+    if (TOKEN_IS_OPER && TOKEN_IS(IF))
+    {
+        (*arrPosition)++;
+
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(L_BRACKET));
+        (*arrPosition)++;
+
+        Node *val = getB(tokenArray, arrPosition);
+
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(R_BRACKET));
+        (*arrPosition)++;
+
+        Node *val2 = getOp(tokenArray, arrPosition);
+
+        return NEW_NODE(EXP_TREE_OPERATOR, IF, val, val2);
+    }
+
+    return NULL;
+}
 
 Node *getA(Token *tokenArray, int *arrPosition)
 {
@@ -385,6 +430,26 @@ Node *getA(Token *tokenArray, int *arrPosition)
     }
 
     return NULL;
+}
+
+Node *getB(Token *tokenArray, int *arrPosition)
+{
+    assert(tokenArray);
+    assert(arrPosition);
+
+    Node *val = getE(tokenArray, arrPosition);
+
+    if (TOKEN_IS_OPER && (TOKEN_IS(BELOW) || TOKEN_IS(ABOVE)))
+    {
+        int oper = tokenArray[*arrPosition].data.operatorNum;
+        (*arrPosition)++;
+
+        Node *val2 = getE(tokenArray, arrPosition);
+
+        val = NEW_NODE(EXP_TREE_OPERATOR, oper, val, val2);
+    }
+
+    return val;
 }
 
 Node *getE(Token *tokenArray, int *arrPosition)

@@ -26,6 +26,9 @@ enum ExpTreeOperators
     R_BRACKET = 10,
     L_BRACKET = 11,
     ASSIGN    = 12,
+    BELOW     = 13,
+    ABOVE     = 14,
+    IF        = 15,
 };
 
 union ExpTreeData

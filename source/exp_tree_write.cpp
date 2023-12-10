@@ -81,6 +81,11 @@ int printTreeOperator(ExpTreeOperators operatorType, FILE *f)
         case R_BRACKET: OPER(")");
 
         case ASSIGN:    OPER("assign");
+
+        case BELOW:     OPER("below");
+        case ABOVE:     OPER("above");
+
+        case IF:    OPER("if");
         
         case NOT_OPER:
         default:
@@ -163,6 +168,11 @@ int printTreeOperatorSymbol(ExpTreeOperators operatorType, FILE *f)
         case R_BRACKET: OPER(")");
 
         case ASSIGN:    OPER("=");
+
+        case BELOW:     OPER("below");
+        case ABOVE:     OPER("above");
+
+        case IF:    OPER("if");
 
         case NOT_OPER:
         default:
@@ -276,7 +286,8 @@ int expTreeOperatorPriority(ExpTreeOperators oper)
             return PR_POW;
         
         case R_BRACKET: case L_BRACKET:
-        case ASSIGN:
+        case ASSIGN: case IF:
+        case BELOW: case ABOVE:
         case NOT_OPER:
         default:
             return PR_UNKNOWN;

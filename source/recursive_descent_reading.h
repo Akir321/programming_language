@@ -40,12 +40,15 @@ int printTokenArray(Token *tokenArray, FILE *f);
 
 Node *getG(Evaluator *eval, const char *str);
 
+Node *getA(Token *tokenArray, int *arrPosition);
+
 Node *getE(Token *tokenArray, int *arrPosition);
 Node *getT(Token *tokenArray, int *arrPosition);
 Node *getP(Token *tokenArray, int *arrPosition);
 Node *getU(Token *tokenArray, int *arrPosition);
 Node *getN(Token *tokenArray, int *arrPosition);
 Node *getPow(Token *tokenArray, int *arrPosition);
+Node *getId(Token *tokenArray, int *arrPosition);
 
 int syntaxError(Token *token, int arrPosition);
 

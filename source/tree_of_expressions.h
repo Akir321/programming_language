@@ -25,6 +25,7 @@ enum ExpTreeOperators
     COS       = 9,
     R_BRACKET = 10,
     L_BRACKET = 11,
+    ASSIGN    = 12,
 };
 
 union ExpTreeData

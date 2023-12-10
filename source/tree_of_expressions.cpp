@@ -303,6 +303,7 @@ double NodeCalculate(double leftTree, double rightTree,
         case COS:       return cos(rightTree);
 
         case L_BRACKET: case R_BRACKET: 
+        case ASSIGN:
                         return 0;
 
         case NOT_OPER:

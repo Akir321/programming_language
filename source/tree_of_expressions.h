@@ -29,6 +29,9 @@ enum ExpTreeOperators
     BELOW     = 13,
     ABOVE     = 14,
     IF        = 15,
+    INSTR_END = 16,
+    OPEN_F    = 17,
+    CLOSE_F   = 18,
 };
 
 union ExpTreeData

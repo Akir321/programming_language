@@ -305,6 +305,8 @@ double NodeCalculate(double leftTree, double rightTree,
         case L_BRACKET: case R_BRACKET: 
         case ASSIGN: case IF:
         case BELOW: case ABOVE:
+        case OPEN_F: case CLOSE_F:
+        case INSTR_END:
                         return 0;
 
         case NOT_OPER:

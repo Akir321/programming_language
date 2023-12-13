@@ -14,7 +14,11 @@
 //const char *expression = NULL;
 //int                  p = 0;
 
-#define syntax_assert(exp) if (!(exp)) printf("SYNTAX_ERROR: %s\n", #exp)
+#define syntax_assert(exp) if (!(exp))                        \
+    {                                                         \
+        printf("SYNTAX_ERROR: %s\n", #exp);                   \
+        syntaxError(&tokenArray[*arrPosition], *arrPosition); \
+    }
 
 #define CHECK_POISON_PTR(ptr) \
     if (ptr == PtrPoison)     \
@@ -158,9 +162,14 @@ int getToken(Evaluator *eval, Token *token, ReadBuf *readBuf)
         case '<':   TOKEN_OP(BELOW);  return EXIT_SUCCESS;
         case '>':   TOKEN_OP(ABOVE);  return EXIT_SUCCESS;
 
+        case ';':   TOKEN_OP(INSTR_END); return EXIT_SUCCESS;
+
 
         case '(':   TOKEN_OP(L_BRACKET); return EXIT_SUCCESS;
         case ')':   TOKEN_OP(R_BRACKET); return EXIT_SUCCESS;
+
+        case '{':   TOKEN_OP(OPEN_F);    return EXIT_SUCCESS;
+        case '}':   TOKEN_OP(CLOSE_F);   return EXIT_SUCCESS;
 
         case ' ':  case '\n':
         case '\t': case '\r':   skipSpaces(readBuf);
@@ -316,17 +325,17 @@ int printTokenArray(Token *tokenArray, FILE *f)
         switch (tokenArray[i].type)
         {
             case EXP_TREE_NUMBER:
-                fprintf(f, " %lg\n", tokenArray[i].data.number);
+                fprintf(f, " [%d] %lg\n", i, tokenArray[i].data.number);
                 break;
 
             case EXP_TREE_OPERATOR:
-                putc(' ', f);
+                fprintf(f, " [%d] ", i);
                 printTreeOperator(tokenArray[i].data.operatorNum, f);
                 putc('\n', f);
                 break;
 
             case EXP_TREE_VARIABLE: 
-                fprintf(f, " var%d\n", tokenArray[i].data.variableNum);
+                fprintf(f, " [%d] var%d\n", i, tokenArray[i].data.variableNum);
                 break;
             
             case EXP_TREE_NOTHING:
@@ -355,7 +364,8 @@ Node *getG(Evaluator *eval, const char *str)
 
     Node *val = getOp(tokenArray, &arrPosition);
 
-    syntax_assert(tokenArray[arrPosition].type == EXP_TREE_NOTHING);
+    if (tokenArray[arrPosition].type != EXP_TREE_NOTHING) syntaxError(tokenArray + arrPosition, arrPosition);
+
     return val;
 }
 
@@ -378,6 +388,31 @@ Node *getOp(Token *tokenArray, int *arrPosition)
 
     Node *val = NULL;
 
+    if (TOKEN_IS_OPER && TOKEN_IS(OPEN_F))
+    {
+        (*arrPosition)++;
+        val = getOp(tokenArray, arrPosition);
+        val = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val, NULL);
+
+        Node *curVal = val;
+
+        int oldPos = *arrPosition;
+
+        while (!(TOKEN_IS_OPER && TOKEN_IS(CLOSE_F)))
+        {
+            Node *val2 = getOp(tokenArray, arrPosition);
+            if (oldPos == *arrPosition) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
+
+            curVal->right = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val2, NULL);
+            curVal = val->right;
+        }
+
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(CLOSE_F));
+        (*arrPosition)++;
+
+        return val;
+    }
+
     val = getIf(tokenArray, arrPosition);
     if (val) return val;
 
@@ -397,12 +432,12 @@ Node *getIf(Token *tokenArray, int *arrPosition)
     {
         (*arrPosition)++;
 
-        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(L_BRACKET));
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(R_BRACKET));
         (*arrPosition)++;
 
         Node *val = getB(tokenArray, arrPosition);
 
-        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(R_BRACKET));
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(L_BRACKET));
         (*arrPosition)++;
 
         Node *val2 = getOp(tokenArray, arrPosition);
@@ -425,6 +460,9 @@ Node *getA(Token *tokenArray, int *arrPosition)
     {
         (*arrPosition)++;
         Node *expression = getE(tokenArray, arrPosition);
+
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(INSTR_END));
+        (*arrPosition)++;
         
         return NEW_NODE(EXP_TREE_OPERATOR, ASSIGN, expression, var);
     }

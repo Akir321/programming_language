@@ -40,8 +40,9 @@ int printTokenArray(Token *tokenArray, FILE *f);
 
 Node *getG(Evaluator *eval, const char *str);
 
+Node *getIfWhile(Token *tokenArray, int *arrPosition);
+
 Node *getOp(Token *tokenArray, int *arrPosition);
-Node *getIf(Token *tokenArray, int *arrPosition);
 Node *getA (Token *tokenArray, int *arrPosition);
 
 Node *getB(Token *tokenArray, int *arrPosition);

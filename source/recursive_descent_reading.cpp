@@ -304,11 +304,12 @@ ExpTreeOperators getWordOperator(const char *word)
 
     if (*word == '\0') return NOT_OPER;
 
-    else if (strcmp(word, "sin") == 0) return SIN;
-    else if (strcmp(word, "cos") == 0) return COS;
-    else if (strcmp(word, "log") == 0) return LOGAR;
-    else if (strcmp(word, "ln")  == 0) return LN;
-    else if (strcmp(word, "if")  == 0) return IF;
+    else if (strcmp(word, "sin")   == 0) return SIN;
+    else if (strcmp(word, "cos")   == 0) return COS;
+    else if (strcmp(word, "log")   == 0) return LOGAR;
+    else if (strcmp(word, "ln")    == 0) return LN;
+    else if (strcmp(word, "if")    == 0) return IF;
+    else if (strcmp(word, "while") == 0) return WHILE;
 
     return NOT_OPER;
 }
@@ -404,7 +405,7 @@ Node *getOp(Token *tokenArray, int *arrPosition)
             if (oldPos == *arrPosition) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
 
             curVal->right = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val2, NULL);
-            curVal = val->right;
+            curVal = curVal->right;
         }
 
         syntax_assert(TOKEN_IS_OPER && TOKEN_IS(CLOSE_F));
@@ -413,7 +414,7 @@ Node *getOp(Token *tokenArray, int *arrPosition)
         return val;
     }
 
-    val = getIf(tokenArray, arrPosition);
+    val = getIfWhile(tokenArray, arrPosition);
     if (val) return val;
 
     val = getA(tokenArray, arrPosition);
@@ -423,13 +424,14 @@ Node *getOp(Token *tokenArray, int *arrPosition)
     return PtrPoison;
 }
 
-Node *getIf(Token *tokenArray, int *arrPosition)
+Node *getIfWhile(Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
 
-    if (TOKEN_IS_OPER && TOKEN_IS(IF))
+    if (TOKEN_IS_OPER && (TOKEN_IS(IF) || TOKEN_IS(WHILE)))
     {
+        int oper = tokenArray[*arrPosition].data.operatorNum;
         (*arrPosition)++;
 
         syntax_assert(TOKEN_IS_OPER && TOKEN_IS(R_BRACKET));
@@ -442,7 +444,7 @@ Node *getIf(Token *tokenArray, int *arrPosition)
 
         Node *val2 = getOp(tokenArray, arrPosition);
 
-        return NEW_NODE(EXP_TREE_OPERATOR, IF, val, val2);
+        return NEW_NODE(EXP_TREE_OPERATOR, oper, val, val2);
     }
 
     return NULL;

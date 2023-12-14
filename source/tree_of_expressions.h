@@ -32,6 +32,7 @@ enum ExpTreeOperators
     INSTR_END = 16,
     OPEN_F    = 17,
     CLOSE_F   = 18,
+    WHILE     = 19,
 };
 
 union ExpTreeData

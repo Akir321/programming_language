@@ -11,8 +11,6 @@
 #include "html_logfile.h"
 #include "tree_graphic_dump.h"
 
-//const char *expression = NULL;
-//int                  p = 0;
 
 #define syntax_assert(exp) if (!(exp))                        \
     {                                                         \
@@ -59,34 +57,6 @@
 #define _COS(      right) NEW_NODE(EXP_TREE_OPERATOR, COS, NULL, right)
 
 
-Token *createTokenArray(Evaluator *eval, const char *source)
-{
-    assert(source);
-
-    ReadBuf readBuf = { strdup(source), (int) strlen(source), 0, 0, 0 };
-    if (!readBuf.str) return NULL;
-
-    int arrPosition = 0;
-    Token *buf = (Token *)calloc(strlen(source) + 1, sizeof(Token));
-    if (!buf) return NULL;  
-
-    while (readBuf.position < readBuf.size)
-    {
-        LOG("\nreadBuf pos = %d\n", readBuf.position);
-        LOG( "Tokenarr pos = %d\n", arrPosition);
-
-        int error = getToken(eval, buf + arrPosition, &readBuf);
-        printTokenArray(buf, LogFile);
-        if (error) { LOG("getToken: ERROR occured: %d\n", error); return NULL; }
-
-        arrPosition++;
-    }
-
-    free(readBuf.str);
-
-    return buf;
-}
-
 int readTreeFromFileRecursive(Evaluator *eval, const char *fileName)
 {
     assert(eval);
@@ -115,7 +85,6 @@ int readTreeFromFileRecursive(Evaluator *eval, const char *fileName)
     return EXIT_SUCCESS;
 }
 
-
 int fileSize(const char *name)
 {
     assert(name);
@@ -125,6 +94,35 @@ int fileSize(const char *name)
 
     int size = stats.st_size;
     return size;
+}
+
+
+Token *createTokenArray(Evaluator *eval, const char *source)
+{
+    assert(source);
+
+    ReadBuf readBuf = { strdup(source), (int) strlen(source), 0, 0, 0 };
+    if (!readBuf.str) return NULL;
+
+    int arrPosition = 0;
+    Token *buf = (Token *)calloc(strlen(source) + 1, sizeof(Token));
+    if (!buf) return NULL;  
+
+    while (readBuf.position < readBuf.size)
+    {
+        LOG("\nreadBuf pos = %d\n", readBuf.position);
+        LOG( "Tokenarr pos = %d\n", arrPosition);
+
+        int error = getToken(eval, buf + arrPosition, &readBuf);
+        printTokenArray(buf, LogFile);
+        if (error) { LOG("getToken: ERROR occured: %d\n", error); return NULL; }
+
+        arrPosition++;
+    }
+
+    free(readBuf.str);
+
+    return buf;
 }
 
 
@@ -370,6 +368,7 @@ Node *getG(Evaluator *eval, const char *str)
     return val;
 }
 
+#define SYNTAX_ERROR { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
 
 #define TOKEN_IS_NUM  (tokenArray[*arrPosition].type == EXP_TREE_NUMBER)
 #define TOKEN_IS_OPER (tokenArray[*arrPosition].type == EXP_TREE_OPERATOR)
@@ -383,6 +382,28 @@ Node *getG(Evaluator *eval, const char *str)
 
 
 Node *getOp(Token *tokenArray, int *arrPosition)
+{
+    assert(tokenArray);
+    assert(arrPosition);
+
+    Node *val = NULL;
+
+    if (TOKEN_IS_OPER && TOKEN_IS(OPEN_F))
+    {
+        return getMultOp(tokenArray, arrPosition);
+    }
+
+    val = getIfWhile(tokenArray, arrPosition);
+    if (val) return val;
+
+    val = getA(tokenArray, arrPosition);
+    if (val) return val;
+
+    syntaxError(tokenArray + *arrPosition, *arrPosition);
+    return PtrPoison;
+}
+
+Node *getMultOp(Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -414,14 +435,7 @@ Node *getOp(Token *tokenArray, int *arrPosition)
         return val;
     }
 
-    val = getIfWhile(tokenArray, arrPosition);
-    if (val) return val;
-
-    val = getA(tokenArray, arrPosition);
-    if (val) return val;
-
-    syntaxError(tokenArray + *arrPosition, *arrPosition);
-    return PtrPoison;
+    return NULL;
 }
 
 Node *getIfWhile(Token *tokenArray, int *arrPosition)
@@ -456,7 +470,7 @@ Node *getA(Token *tokenArray, int *arrPosition)
     assert(arrPosition);
 
     Node *var = getId(tokenArray, arrPosition);
-    if (var == PtrPoison) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
+    if (var == PtrPoison) SYNTAX_ERROR;
 
     if (TOKEN_IS_OPER && TOKEN_IS(ASSIGN))
     {

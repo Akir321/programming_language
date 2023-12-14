@@ -42,6 +42,8 @@ Node *getG(Evaluator *eval, const char *str);
 
 Node *getIfWhile(Token *tokenArray, int *arrPosition);
 
+Node *getMultOp (Token *tokenArray, int *arrPosition);
+
 Node *getOp(Token *tokenArray, int *arrPosition);
 Node *getA (Token *tokenArray, int *arrPosition);
 

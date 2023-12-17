@@ -361,7 +361,7 @@ Node *getG(Evaluator *eval, const char *str)
 
     int arrPosition = 0;
 
-    Node *val = getOp(tokenArray, &arrPosition);
+    Node *val = getMultOp(tokenArray, &arrPosition);
 
     if (tokenArray[arrPosition].type != EXP_TREE_NOTHING) syntaxError(tokenArray + arrPosition, arrPosition);
 
@@ -390,7 +390,13 @@ Node *getOp(Token *tokenArray, int *arrPosition)
 
     if (TOKEN_IS_OPER && TOKEN_IS(OPEN_F))
     {
-        return getMultOp(tokenArray, arrPosition);
+        (*arrPosition)++;
+        val = getMultOp(tokenArray, arrPosition);
+
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(CLOSE_F));
+        (*arrPosition)++;
+
+        return val;
     }
 
     val = getIfWhile(tokenArray, arrPosition);
@@ -410,32 +416,24 @@ Node *getMultOp(Token *tokenArray, int *arrPosition)
 
     Node *val = NULL;
 
-    if (TOKEN_IS_OPER && TOKEN_IS(OPEN_F))
+    
+    val = getOp(tokenArray, arrPosition);
+    val = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val, NULL);
+
+    Node *curVal = val;
+
+    int oldPos = *arrPosition;
+
+    while (!((TOKEN_IS_OPER && TOKEN_IS(CLOSE_F)) || TOKEN_IS_NULL))
     {
-        (*arrPosition)++;
-        val = getOp(tokenArray, arrPosition);
-        val = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val, NULL);
+        Node *val2 = getOp(tokenArray, arrPosition);
+        if (oldPos == *arrPosition) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
 
-        Node *curVal = val;
-
-        int oldPos = *arrPosition;
-
-        while (!(TOKEN_IS_OPER && TOKEN_IS(CLOSE_F)))
-        {
-            Node *val2 = getOp(tokenArray, arrPosition);
-            if (oldPos == *arrPosition) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
-
-            curVal->right = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val2, NULL);
-            curVal = curVal->right;
-        }
-
-        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(CLOSE_F));
-        (*arrPosition)++;
-
-        return val;
+        curVal->right = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val2, NULL);
+        curVal = curVal->right;
     }
 
-    return NULL;
+    return val;
 }
 
 Node *getIfWhile(Token *tokenArray, int *arrPosition)

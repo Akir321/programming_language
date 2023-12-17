@@ -4,26 +4,19 @@
 #include "exp_tree_write.h"
 #include "tree_graphic_dump.h"
 #include "recursive_descent_reading.h"
+#include "tree_simplify.h"
 
 const char *fileName = "code.txt";
 
 int main()
 {
-    //Token *tokenArray = createTokenArray(Expression);
-    //printTokenArray(tokenArray, stdout);
-
     Evaluator eval = {};
-    //evaluatorCtor(&eval);
-
-    //eval.tree.root = getG(Expression);
+    
     readTreeFromFileRecursive(&eval, fileName);
     treeGraphicDump(&eval, eval.tree.root);
 
+    expTreeSimplify(&eval, eval.tree.root);
+    treeGraphicDump(&eval, eval.tree.root);
 
     evaluatorDtor(&eval);
 }
-
-
-
-
-

@@ -46,12 +46,12 @@ int dumpNode(Evaluator *eval, Node *node, FILE *f)
     if (node == PtrPoison) { fprintf(f, "Node * = PtrPoison\n"); return EXIT_FAILURE; }
     if (node == NULL     ) { fprintf(f, "Node * = NULL\n");      return EXIT_FAILURE; }
 
-    fprintf(f, "\nI'm Node dump:\n");
+    fprintf(f, "\nI'm Node <%p> dump:\n", node);
 
     fprintf(f, "    type  = %d\n", node->type);
     fprintf(f, "    data  = ");
     printNode(eval, node, f);    
-    putchar('\n');
+    putc('\n', f);
 
     fprintf(f, "    left  = %p\n", node->left);
     fprintf(f, "    right = %p\n", node->right);

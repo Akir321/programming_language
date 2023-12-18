@@ -1,0 +1,206 @@
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+
+#include "tree_of_expressions.h"
+#include "html_logfile.h"
+#include "exp_tree_write.h"
+#include "assembler_code.h"
+
+#define CHECK_POISON_PTR(ptr) \
+    if (ptr == PtrPoison)     \
+    {                         \
+        LOG("ERROR: PoisonPtr detected in %s(%d) %s\n", __FILE__, __LINE__, __func__);\
+        return 0;                                                                     \
+    }
+
+
+int createAssemblerCodeFile(Evaluator *eval, const char *fileInName)
+{
+    assert(eval);
+    assert(fileInName);
+
+    char *fileName = getFileName(fileInName, "assembler.txt");
+    FILE *f = fopen(fileName, "w");
+
+    if (!f) return MEMORY_ERROR;
+
+    convertToAssemblyCode(eval, eval->tree.root, f);
+
+    fprintf(f, "\nhlt\n");
+
+    fclose(f);
+    free(fileName);
+
+    return EXIT_SUCCESS;
+}
+
+char *getFileName(const char *fileInName, const char *postfix)
+{
+    assert(fileInName);
+    assert(postfix);
+
+    char *temp = strdup(fileInName);
+    strtok(temp, ".");
+
+    char *fileName = NULL;
+    __mingw_asprintf(&fileName, "%s%s", temp, postfix);
+
+    free(temp);
+    return fileName;
+}
+
+int convertToAssemblyCode(Evaluator *eval, Node *root, FILE *f)
+{
+    assert(eval);
+    assert(f);
+
+    dumpNode(eval, root, LogFile);
+    LOG("\n");
+
+    if (!root) return EXIT_SUCCESS;
+
+    switch (root->type)
+    {
+        case EXP_TREE_NOTHING:  return EXIT_SUCCESS;
+
+        case EXP_TREE_NUMBER:   fprintf(f, "push %lg\n", root->data.number);
+                                return EXIT_SUCCESS;
+        
+        case EXP_TREE_VARIABLE: fprintf(f, "push ");
+                                printAssemblyRegister(eval, root, f);
+                                fprintf(f, "\n");
+                                return EXIT_SUCCESS;
+
+        case EXP_TREE_OPERATOR: break;
+    
+        default:                LOG("ERROR in %s(%d) in function %s: unknown Node type: %d\n",
+                                    __FILE__, __LINE__ - 1, __func__, root->type);
+                                return EXIT_FAILURE;
+    }
+
+    switch (root->data.operatorNum)
+    {
+        case INSTR_END:             convertToAssemblyCode(eval, root->left,  f);
+                                    convertToAssemblyCode(eval, root->right, f);
+                                    return EXIT_SUCCESS;
+
+        case ASSIGN:                return printCaseAssign(eval, root, f);
+                                    
+        case ADD: case SUB:
+        case MUL: case DIV:
+        case POW: case LN:          
+        case LOGAR:
+        case SIN: case COS:         convertToAssemblyCode(eval, root->left,  f);
+                                    convertToAssemblyCode(eval, root->right, f);
+                                    printTreeOperator(root->data.operatorNum, f);
+
+                                    fprintf(f, "\n");
+                                    return EXIT_SUCCESS;
+
+        case BELOW:
+        case ABOVE:                 convertToAssemblyCode(eval, root->left,  f);
+                                    convertToAssemblyCode(eval, root->right, f);
+                                    fprintf(f, "sub\n\n");
+                                    return EXIT_SUCCESS;
+
+        case IF:                    return printCaseIf(eval, root, f);
+
+        case WHILE:
+
+
+
+
+        case OPEN_F:
+        case CLOSE_F:
+        case R_BRACKET:
+        case L_BRACKET:
+        case NOT_OPER:
+        default:                    LOG("ERROR in %s(%d) in function %s: unsupported operator: %d\n",
+                                        __FILE__, __LINE__ - 1, __func__, root->data.operatorNum);
+                                    return EXIT_FAILURE;
+    }
+}
+
+int printAssemblyRegister(Evaluator *eval, Node *node, FILE *f)
+{
+    if (node->type != EXP_TREE_VARIABLE) return BAD_NODE_TYPE;
+
+    int varIndex = node->data.variableNum;
+
+    if (0 <= varIndex && varIndex < eval->names.count)
+    {
+        fprintf(f, "r%cx", varIndex + 'a');
+        return EXIT_SUCCESS;
+    }
+
+    LOG("ERROR: unknown var number: %d\n", varIndex);
+    return EXIT_FAILURE; 
+}
+
+int printCaseAssign(Evaluator *eval, Node *root, FILE *f)
+{
+    assert(eval);
+    assert(root);
+    assert(f);
+
+    if (root->right->type != EXP_TREE_VARIABLE) return BAD_NODE_TYPE;
+
+    convertToAssemblyCode(eval, root->left,  f);
+
+    int varIndex = root->right->data.variableNum;
+    LOG("varIndex is %d\n", varIndex);
+
+    if (0 <= varIndex && varIndex < eval->names.count)
+    {
+        fprintf(f, "pop ");
+        printAssemblyRegister(eval, root->right, f);
+        fprintf(f, "\n\n");
+
+        return EXIT_SUCCESS;
+    }
+
+    LOG("ERROR: unknown var number: %d\n", varIndex);
+    return EXIT_FAILURE;                                                         
+}
+
+int printCaseIf(Evaluator *eval, Node *root, FILE *f)
+{
+    assert(eval);
+    assert(root);
+    assert(f);
+
+    static int ifStaticNumber = 0;
+    int ifNumber = ifStaticNumber + 1;
+
+    convertToAssemblyCode(eval, root->left,  f);
+    fprintf(f, "\npush 0\n");
+
+    Node *node = root->left;
+
+    if (node->type == EXP_TREE_OPERATOR)
+    {
+        int oper = node->data.operatorNum;
+
+        switch (oper)
+        {
+            case ABOVE:     fprintf(f, "jbe :end_if_%d\n\n", ifNumber);
+                            break;
+
+            case BELOW:     fprintf(f, "jae :end_if_%d\n\n", ifNumber);
+                            break;
+
+            default:        fprintf(f, "jne :end_if_%d\n\n", ifNumber);
+                            break;
+        }
+    }
+    else                    fprintf(f, "jne :end_if_%d\n\n", ifNumber);
+    
+    ifStaticNumber++;
+    convertToAssemblyCode(eval, root->right,  f);
+    fprintf(f, ":end_if_%d\n\n", ifNumber);
+    ifNumber++;
+
+    return EXIT_SUCCESS;
+}
+

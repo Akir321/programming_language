@@ -99,6 +99,8 @@ enum ExpTreeErrors
     LOG_NEGATIVE_ARG  = -4,
     LOG_BAD_BASE      = -5,
     MEMORY_ERROR      = -6,
+    BAD_NODE_TYPE     = -7,
+    BAD_VAR_INDEX     = -8,
 };
 
 Node * const PtrPoison = (Node *)42;

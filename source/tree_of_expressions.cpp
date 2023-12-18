@@ -302,9 +302,13 @@ double NodeCalculate(double leftTree, double rightTree,
 
         case COS:       return cos(rightTree);
 
+        case BELOW:     return (int) (leftTree < rightTree);
+
+        case ABOVE:     return (int) (leftTree > rightTree);
+
+
         case L_BRACKET: case R_BRACKET: 
         case ASSIGN:    case IF:
-        case BELOW:     case ABOVE:
         case OPEN_F:    case CLOSE_F:
         case INSTR_END: case WHILE:
 

@@ -16,6 +16,7 @@
     {                                                         \
         printf("SYNTAX_ERROR: %s\n", #exp);                   \
         syntaxError(&tokenArray[*arrPosition], *arrPosition); \
+        return NULL;                                          \
     }
 
 #define CHECK_POISON_PTR(ptr) \
@@ -386,6 +387,8 @@ Node *getOp(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+
     Node *val = NULL;
 
     if (TOKEN_IS_OPER && TOKEN_IS(OPEN_F))
@@ -414,6 +417,8 @@ Node *getMultOp(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+
     Node *val = NULL;
 
     
@@ -441,6 +446,8 @@ Node *getIfWhile(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+
     if (TOKEN_IS_OPER && (TOKEN_IS(IF) || TOKEN_IS(WHILE)))
     {
         int oper = tokenArray[*arrPosition].data.operatorNum;
@@ -450,11 +457,13 @@ Node *getIfWhile(Token *tokenArray, int *arrPosition)
         (*arrPosition)++;
 
         Node *val = getB(tokenArray, arrPosition);
+        if (!val) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
 
         syntax_assert(TOKEN_IS_OPER && TOKEN_IS(L_BRACKET));
         (*arrPosition)++;
 
         Node *val2 = getOp(tokenArray, arrPosition);
+        if (!val2) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
 
         return NEW_NODE(EXP_TREE_OPERATOR, oper, val, val2);
     }
@@ -466,6 +475,8 @@ Node *getA(Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
+
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *var = getId(tokenArray, arrPosition);
     if (var == PtrPoison) SYNTAX_ERROR;
@@ -489,6 +500,8 @@ Node *getB(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+
     Node *val = getE(tokenArray, arrPosition);
 
     if (TOKEN_IS_OPER && (TOKEN_IS(BELOW) || TOKEN_IS(ABOVE)))
@@ -508,6 +521,8 @@ Node *getE(Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
+
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *val = getT(tokenArray, arrPosition);
 
@@ -533,6 +548,8 @@ Node *getT(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+
     Node *val = getPow(tokenArray, arrPosition);
 
     while (TOKEN_IS_OPER && (TOKEN_IS(MUL) || TOKEN_IS(DIV)))
@@ -557,6 +574,8 @@ Node *getPow(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+
     Node *base = getP(tokenArray, arrPosition);
 
     if (TOKEN_IS_OPER && TOKEN_IS(POW))
@@ -578,10 +597,13 @@ Node *getP(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+
     if (TOKEN_IS_OPER && TOKEN_IS(L_BRACKET))
     {
         (*arrPosition)++;
         Node *val = getE(tokenArray, arrPosition);
+        if (!val) syntaxError(tokenArray + *arrPosition, *arrPosition);
 
         syntax_assert(TOKEN_IS_OPER && TOKEN_IS(R_BRACKET));
         (*arrPosition)++;
@@ -598,6 +620,8 @@ Node *getU(Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
+
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Token *curToken = tokenArray + *arrPosition;
 
@@ -639,6 +663,8 @@ Node *getN(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+
     Token *curToken = tokenArray + *arrPosition;
 
     if (TOKEN_IS_NUM)
@@ -678,6 +704,8 @@ Node *getId(Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
+
+    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Token *curToken = tokenArray + *arrPosition;
 

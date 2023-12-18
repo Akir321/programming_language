@@ -18,14 +18,16 @@ INCLUDES =  $(SRC_DIR)tree_of_expressions.h 	 	\
 			$(SRC_DIR)html_logfile.h        	 	\
 			$(SRC_DIR)exp_tree_write.h      	 	\
 			$(SRC_DIR)recursive_descent_reading.h   \
-			$(SRC_DIR)tree_simplify.h
+			$(SRC_DIR)tree_simplify.h               \
+			$(SRC_DIR)assembler_code.h
 
 OBJECTS  =  $(OBJ_DIR)tree_of_expressions.o 		\
 			$(OBJ_DIR)tree_graphic_dump.o   		\
 			$(OBJ_DIR)html_logfile.o        		\
 			$(OBJ_DIR)exp_tree_write.o      		\
 			$(OBJ_DIR)recursive_descent_reading.o   \
-			$(OBJ_DIR)tree_simplify.o
+			$(OBJ_DIR)tree_simplify.o               \
+			$(OBJ_DIR)assembler_code.o
 
 DUMPS    =  $(DMP_DIR)*.dot                         \
 			$(DMP_DIR)*.png
@@ -60,6 +62,9 @@ $(OBJ_DIR)recursive_descent_reading.o  : $(SRC_DIR)recursive_descent_reading.cpp
 	$(CXX) -c $< -o $@ $(CXX_FLAGS)
 
 $(OBJ_DIR)tree_simplify.o: $(SRC_DIR)tree_simplify.cpp                            $(INCLUDES)
+	$(CXX) -c $< -o $@ $(CXX_FLAGS)
+
+$(OBJ_DIR)assembler_code.o: $(SRC_DIR)assembler_code.cpp                          $(INCLUDES)
 	$(CXX) -c $< -o $@ $(CXX_FLAGS)
 
 

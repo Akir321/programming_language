@@ -5,6 +5,7 @@
 #include "tree_graphic_dump.h"
 #include "recursive_descent_reading.h"
 #include "tree_simplify.h"
+#include "assembler_code.h"
 
 const char *fileName = "code.txt";
 
@@ -17,6 +18,8 @@ int main()
 
     expTreeSimplify(&eval, eval.tree.root);
     treeGraphicDump(&eval, eval.tree.root);
+
+    createAssemblerCodeFile(&eval, fileName);
 
     evaluatorDtor(&eval);
 }

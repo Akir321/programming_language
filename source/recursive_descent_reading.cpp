@@ -309,6 +309,8 @@ ExpTreeOperators getWordOperator(const char *word)
     else if (strcmp(word, "ln")    == 0) return LN;
     else if (strcmp(word, "if")    == 0) return IF;
     else if (strcmp(word, "while") == 0) return WHILE;
+    else if (strcmp(word, "in")    == 0) return IN;
+    else if (strcmp(word, "out")   == 0) return OUT;
 
     return NOT_OPER;
 }
@@ -405,6 +407,9 @@ Node *getOp(Token *tokenArray, int *arrPosition)
     val = getIfWhile(tokenArray, arrPosition);
     if (val) return val;
 
+    val = getInOut(tokenArray, arrPosition);
+    if (val) return val;
+
     val = getA(tokenArray, arrPosition);
     if (val) return val;
 
@@ -466,6 +471,32 @@ Node *getIfWhile(Token *tokenArray, int *arrPosition)
         if (!val2) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
 
         return NEW_NODE(EXP_TREE_OPERATOR, oper, val, val2);
+    }
+
+    return NULL;
+}
+
+Node *getInOut(Token *tokenArray, int *arrPosition)
+{
+    assert(tokenArray);
+    assert(arrPosition);
+
+    if (TOKEN_IS_OPER && (TOKEN_IS(IN) || TOKEN_IS(OUT)))
+    {
+        int oper = tokenArray[*arrPosition].data.operatorNum;
+        (*arrPosition)++;
+
+        Node *val = NULL;
+        
+        if (oper == IN)  val = getId(tokenArray, arrPosition);
+        if (oper == OUT) val = getE(tokenArray, arrPosition);
+
+        if (val == PtrPoison) SYNTAX_ERROR;
+
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(INSTR_END));
+        (*arrPosition)++;
+
+        return NEW_NODE(EXP_TREE_OPERATOR, oper, NULL, val);
     }
 
     return NULL;

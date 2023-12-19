@@ -3,11 +3,15 @@
 
 
 
-
+in a;
 
 while )x < y( 
 
     {
-        while )a > b( a = a - 1;
+        while )a > b( 
+            {
+                a = a - 1;
+                out a;
+            }
         y=2; 
     }

@@ -98,12 +98,20 @@ int printAssemblyOperator(Evaluator *eval, Node *root, FILE *f)
                                     
         case ADD: case SUB: case MUL: case DIV:
         case POW: case LN:  case LOGAR:
-        case SIN: case COS:         convertToAssemblyCode(eval, root->left,  f);
+        case SIN: case COS:         
+        case OUT:                   convertToAssemblyCode(eval, root->left,  f);
                                     convertToAssemblyCode(eval, root->right, f);
                                     printTreeOperator(root->data.operatorNum, f);
 
                                     fprintf(f, "\n");
                                     return EXIT_SUCCESS;
+
+        case IN:                    printTreeOperator(root->data.operatorNum, f);
+                                    fprintf(f, "\npop ");
+                                    printAssemblyRegister(eval, root->right, f);
+                                    fprintf(f, "\n");
+                                    return EXIT_SUCCESS;
+
 
         case BELOW: case ABOVE:     convertToAssemblyCode(eval, root->left,  f);
                                     convertToAssemblyCode(eval, root->right, f);

@@ -133,6 +133,7 @@ int tryNodeSimplify(Evaluator *eval, Node *node)
         case BELOW:  case ABOVE:
         case IF:     case INSTR_END:
         case OPEN_F: case CLOSE_F:
+        case OUT:    case IN:
         
             return EXIT_SUCCESS;
 

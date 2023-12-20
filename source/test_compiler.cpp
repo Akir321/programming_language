@@ -7,7 +7,7 @@
 #include "tree_simplify.h"
 #include "assembler_code.h"
 
-const char *fileName = "code.txt";
+const char *fileName = "square_solver.txt";
 
 int main()
 {
@@ -15,6 +15,11 @@ int main()
     
     readTreeFromFileRecursive(&eval, fileName);
     treeGraphicDump(&eval, eval.tree.root);
+    if (eval.tree.root == PtrPoison)
+    {
+        printf("SYNTAX_ERROR detected\n");
+        return 0;
+    }
 
     expTreeSimplify(&eval, eval.tree.root);
     treeGraphicDump(&eval, eval.tree.root);

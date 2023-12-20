@@ -1,0 +1,49 @@
+
+
+
+
+vvedi a slavsya_rus
+vvedi b slavsya_rus
+vvedi c slavsya_rus
+
+koli a ravno 0 togda
+pole_polushko_nachnis
+
+    koli b ravno 0 togda 
+    pole_polushko_nachnis
+        koli c   ravno 0 togda vivedi(8) slavsya_rus
+        koli c neravno 0 togda vivedi(0) slavsya_rus
+    pole_polushko_zakonchis
+
+    koli b neravno 0 togda
+    pole_polushko_nachnis
+        vivedi(1)    slavsya_rus
+        vivedi(minus c delit b) slavsya_rus
+    pole_polushko_zakonchis
+pole_polushko_zakonchis
+
+
+koli a neravno 0 togda
+pole_polushko_nachnis
+
+    D     prisvoy b umnozhit b minus 4 umnozhit a umnozhit c slavsya_rus
+    root0 prisvoy minus c delit b slavsya_rus
+
+    koli D menshe 0 togda vivedi(0) slavsya_rus
+
+    koli D ravno  0 togda
+    pole_polushko_nachnis
+        vivedi(1)     slavsya_rus
+        vivedi(root0) slavsya_rus
+    pole_polushko_zakonchis
+
+    koli D bolshe 0 togda
+    pole_polushko_nachnis
+        vivedi(2) slavsya_rus
+        Dsqroot prisvoy D vozvesti (1 delit 2) slavsya_rus
+        vivedi(root0 minus Dsqroot) slavsya_rus
+        vivedi(root0 plus  Dsqroot) slavsya_rus
+    pole_polushko_zakonchis
+pole_polushko_zakonchis
+
+

@@ -12,11 +12,12 @@
 #include "tree_graphic_dump.h"
 
 
-#define syntax_assert(exp) if (!(exp))                        \
-    {                                                         \
-        printf("SYNTAX_ERROR: %s\n", #exp);                   \
-        syntaxError(&tokenArray[*arrPosition], *arrPosition); \
-        return NULL;                                          \
+#define syntax_assert(exp) if (!(exp))                                 \
+    {                                                                  \
+        printf("SYNTAX_ERROR: %s\n", #exp);                            \
+        fprintf(LogFile, "function throwing s_error: %s\n", __func__); \
+        syntaxError(&tokenArray[*arrPosition], *arrPosition);          \
+        return NULL;                                                   \
     }
 
 #define CHECK_POISON_PTR(ptr) \
@@ -151,24 +152,9 @@ int getToken(Evaluator *eval, Token *token, ReadBuf *readBuf)
             caseNumber(token, readBuf); return EXIT_SUCCESS;
         }
 
-        case '+':   TOKEN_OP(ADD);    return EXIT_SUCCESS;
-        case '-':   TOKEN_OP(SUB);    return EXIT_SUCCESS;
-        case '*':   TOKEN_OP(MUL);    return EXIT_SUCCESS;
-        case '/':   TOKEN_OP(DIV);    return EXIT_SUCCESS;
-        case '^':   TOKEN_OP(POW);    return EXIT_SUCCESS;
-
-        case '=':   TOKEN_OP(ASSIGN); return EXIT_SUCCESS;
-        case '<':   TOKEN_OP(BELOW);  return EXIT_SUCCESS;
-        case '>':   TOKEN_OP(ABOVE);  return EXIT_SUCCESS;
-
-        case ';':   TOKEN_OP(INSTR_END); return EXIT_SUCCESS;
-
 
         case '(':   TOKEN_OP(L_BRACKET); return EXIT_SUCCESS;
         case ')':   TOKEN_OP(R_BRACKET); return EXIT_SUCCESS;
-
-        case '{':   TOKEN_OP(OPEN_F);    return EXIT_SUCCESS;
-        case '}':   TOKEN_OP(CLOSE_F);   return EXIT_SUCCESS;
 
         case ' ':  case '\n':
         case '\t': case '\r':   skipSpaces(readBuf);
@@ -179,6 +165,10 @@ int getToken(Evaluator *eval, Token *token, ReadBuf *readBuf)
         case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': 
         case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': 
         case 'v': case 'w': case 'x': case 'y': case 'z':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G':
+        case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': 
+        case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': 
+        case 'V': case 'W': case 'X': case 'Y': case 'Z':
         {
             caseLetter(eval, token, readBuf); return EXIT_SUCCESS;
         }
@@ -274,12 +264,14 @@ int caseLetter(Evaluator *eval, Token *token, ReadBuf *readBuf)
     if (!word) return MEMORY_ERROR;
 
     int linePosition = readBuf->linePosition;
+    char *c = &readBuf->str[readBuf->position];
     
-    while (isalpha(readBuf->str[readBuf->position]))
+    while (isalnum(*c) || *c == '_')
     {
-        word[position++] = readBuf->str[readBuf->position];
+        word[position++] = *c;
         readBuf->position++;
         readBuf->linePosition++;
+        c++;
     }
 
     ExpTreeOperators op = getWordOperator(word);
@@ -288,32 +280,57 @@ int caseLetter(Evaluator *eval, Token *token, ReadBuf *readBuf)
         int index = nameTableFind(&eval->names, word);
         if (index == IndexPoison) index = nameTableAdd(&eval->names, word, 0);
 
+        free(word);
+
         SET_TOKEN(EXP_TREE_VARIABLE, index);
         return EXIT_SUCCESS;
     }
     
+    free(word);
     SET_TOKEN(EXP_TREE_OPERATOR, op);
     return EXIT_SUCCESS;
 }
 #undef SET_TOKEN
 
+#define COMPARE_WORD(kw, oper) else if (strcmp(word, kw)   == 0) return oper
+
 ExpTreeOperators getWordOperator(const char *word)
 {
     assert(word);
 
+    LOG("(%s) -- word\n", word);
+
     if (*word == '\0') return NOT_OPER;
 
-    else if (strcmp(word, "sin")   == 0) return SIN;
-    else if (strcmp(word, "cos")   == 0) return COS;
-    else if (strcmp(word, "log")   == 0) return LOGAR;
-    else if (strcmp(word, "ln")    == 0) return LN;
-    else if (strcmp(word, "if")    == 0) return IF;
-    else if (strcmp(word, "while") == 0) return WHILE;
-    else if (strcmp(word, "in")    == 0) return IN;
-    else if (strcmp(word, "out")   == 0) return OUT;
+    COMPARE_WORD("sin",      SIN);
+    COMPARE_WORD("cos",      COS);
+    COMPARE_WORD("log",      LOGAR);
+    COMPARE_WORD("ln",       LN);
+    COMPARE_WORD("koli",     IF);
+    COMPARE_WORD("pokuda",   WHILE);
+    COMPARE_WORD("vvedi",    IN);
+    COMPARE_WORD("vivedi",   OUT);
+    COMPARE_WORD("plus",     ADD);
+    COMPARE_WORD("minus",    SUB);
+    COMPARE_WORD("umnozhit", MUL);
+    COMPARE_WORD("delit",    DIV);
+    COMPARE_WORD("vozvesti", POW);
+    COMPARE_WORD("prisvoy",  ASSIGN);
+    COMPARE_WORD("menshe",   BELOW);
+    COMPARE_WORD("bolshe",   ABOVE);
+    COMPARE_WORD("togda",    THEN);
+    COMPARE_WORD("ravno",    EQUAL);
+    COMPARE_WORD("neravno",  NOT_EQUAL);
 
-    return NOT_OPER;
+    COMPARE_WORD("pole_polushko_nachnis",   OPEN_F);
+    COMPARE_WORD("pole_polushko_zakonchis", CLOSE_F);
+
+    COMPARE_WORD("slavsya_rus", INSTR_END);
+
+
+    else return NOT_OPER;
 }
+#undef COMPARE_WORD
 
 int printTokenArray(Token *tokenArray, FILE *f)
 {
@@ -371,7 +388,12 @@ Node *getG(Evaluator *eval, const char *str)
     return val;
 }
 
-#define SYNTAX_ERROR { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
+#define SYNTAX_ERROR                                          \
+    {                                                         \
+        fprintf(LogFile, "function throwing s_error: %s\n", __func__); \
+        syntaxError(tokenArray + *arrPosition, *arrPosition); \
+        return PtrPoison;                                     \
+    }
 
 #define TOKEN_IS_NUM  (tokenArray[*arrPosition].type == EXP_TREE_NUMBER)
 #define TOKEN_IS_OPER (tokenArray[*arrPosition].type == EXP_TREE_OPERATOR)
@@ -458,13 +480,10 @@ Node *getIfWhile(Token *tokenArray, int *arrPosition)
         int oper = tokenArray[*arrPosition].data.operatorNum;
         (*arrPosition)++;
 
-        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(R_BRACKET));
-        (*arrPosition)++;
-
         Node *val = getB(tokenArray, arrPosition);
         if (!val) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
 
-        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(L_BRACKET));
+        syntax_assert(TOKEN_IS_OPER && TOKEN_IS(THEN));
         (*arrPosition)++;
 
         Node *val2 = getOp(tokenArray, arrPosition);
@@ -535,7 +554,8 @@ Node *getB(Token *tokenArray, int *arrPosition)
 
     Node *val = getE(tokenArray, arrPosition);
 
-    if (TOKEN_IS_OPER && (TOKEN_IS(BELOW) || TOKEN_IS(ABOVE)))
+    if (TOKEN_IS_OPER && (TOKEN_IS(BELOW) || TOKEN_IS(ABOVE) ||
+                          TOKEN_IS(EQUAL) || TOKEN_IS(NOT_EQUAL)))
     {
         int oper = tokenArray[*arrPosition].data.operatorNum;
         (*arrPosition)++;

@@ -20,7 +20,7 @@ int createAssemblerCodeFile(Evaluator *eval, const char *fileInName)
     assert(eval);
     assert(fileInName);
 
-    char *fileName = getFileName(fileInName, "assembler.txt");
+    char *fileName = getFileName(fileInName, "_assembler.txt");
     FILE *f = fopen(fileName, "w");
 
     if (!f) return MEMORY_ERROR;
@@ -112,7 +112,7 @@ int printAssemblyOperator(Evaluator *eval, Node *root, FILE *f)
                                     fprintf(f, "\n");
                                     return EXIT_SUCCESS;
 
-
+        case EQUAL: case NOT_EQUAL:
         case BELOW: case ABOVE:     convertToAssemblyCode(eval, root->left,  f);
                                     convertToAssemblyCode(eval, root->right, f);
                                     fprintf(f, "sub\n\n");
@@ -124,6 +124,7 @@ int printAssemblyOperator(Evaluator *eval, Node *root, FILE *f)
 
         case OPEN_F:    case CLOSE_F:
         case R_BRACKET: case L_BRACKET:
+        case THEN:
         case NOT_OPER:
         default:                    LOG("ERROR in %s(%d) in function %s: unsupported operator: %d\n",
                                         __FILE__, __LINE__ - 1, __func__, root->data.operatorNum);
@@ -248,6 +249,12 @@ int printJmpOperator(int oper, const char *labelPrefix, int labelNum,  FILE *f)
                         break;
 
         case BELOW:     fprintf(f, "jae :%s%d\n\n", labelPrefix, labelNum);
+                        break;
+
+        case EQUAL:     fprintf(f, "jne :%s%d\n\n", labelPrefix, labelNum);
+                        break;
+
+        case NOT_EQUAL: fprintf(f, "je  :%s%d\n\n", labelPrefix, labelNum);
                         break;
 
         default:        fprintf(f, "jne :%s%d\n\n", labelPrefix, labelNum);

@@ -89,8 +89,11 @@ int printTreeOperator(ExpTreeOperators operatorType, FILE *f)
 
         case BELOW:     OPER("below");
         case ABOVE:     OPER("above");
+        case EQUAL:     OPER("==");
+        case NOT_EQUAL: OPER("!=");
 
         case WHILE:     OPER("while");
+        case THEN:      OPER("then");
 
         case IF:    OPER("if");
 
@@ -186,8 +189,11 @@ int printTreeOperatorSymbol(ExpTreeOperators operatorType, FILE *f)
 
         case BELOW:     OPER("below");
         case ABOVE:     OPER("above");
+        case EQUAL:     OPER("==");
+        case NOT_EQUAL: OPER("!=");
 
         case WHILE:     OPER("while");
+        case THEN:      OPER("then");
 
         case IF:    OPER("if");
 
@@ -311,8 +317,9 @@ int expTreeOperatorPriority(ExpTreeOperators oper)
         case OPEN_F: case CLOSE_F:
         case INSTR_END:
         case NOT_OPER:
-        case WHILE:
+        case WHILE: case THEN:
         case IN: case OUT:
+        case EQUAL: case NOT_EQUAL:
         default:
             return PR_UNKNOWN;
     }

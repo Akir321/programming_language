@@ -2,16 +2,16 @@
 
 
 
+vvedi a slavsya_rus
 
-in a;
+pokuda x ravno y togda
+pole_polushko_nachnis
 
-while )x < y( 
+    pokuda a neravno b togda
+    pole_polushko_nachnis
+        a prisvoy a minus 1 slavsya_rus
+        vivedi a slavsya_rus
+    pole_polushko_zakonchis
 
-    {
-        while )a > b( 
-            {
-                a = a - 1;
-                out a;
-            }
-        y=2; 
-    }
+    y prisvoy 2 slavsya_rus 
+pole_polushko_zakonchis

@@ -35,6 +35,9 @@ enum ExpTreeOperators
     WHILE     = 19,
     IN        = 20,
     OUT       = 21,
+    THEN      = 22,
+    EQUAL     = 23,
+    NOT_EQUAL = 24,
 };
 
 union ExpTreeData

@@ -27,7 +27,7 @@ koli a neravno 0 togda
 pole_polushko_nachnis
 
     D     prisvoy b umnozhit b minus 4 umnozhit a umnozhit c slavsya_rus
-    root0 prisvoy minus c delit b slavsya_rus
+    root0 prisvoy minus b delit (2 umnozhit a) slavsya_rus
 
     koli D menshe 0 togda vivedi(0) slavsya_rus
 
@@ -40,7 +40,7 @@ pole_polushko_nachnis
     koli D bolshe 0 togda
     pole_polushko_nachnis
         vivedi(2) slavsya_rus
-        Dsqroot prisvoy D vozvesti (1 delit 2) slavsya_rus
+        Dsqroot prisvoy koreshok(D) delit (2 umnozhit a) slavsya_rus
         vivedi(root0 minus Dsqroot) slavsya_rus
         vivedi(root0 plus  Dsqroot) slavsya_rus
     pole_polushko_zakonchis

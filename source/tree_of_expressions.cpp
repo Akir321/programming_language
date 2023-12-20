@@ -302,9 +302,15 @@ double NodeCalculate(double leftTree, double rightTree,
 
         case COS:       return cos(rightTree);
 
+        case SQRT:      return sqrt(rightTree);
+
         case BELOW:     return (int) (leftTree < rightTree);
 
         case ABOVE:     return (int) (leftTree > rightTree);
+
+        case EQUAL:     return (int) equalDouble(leftTree, rightTree);
+
+        case NOT_EQUAL: return (int) !equalDouble(leftTree, rightTree);
 
 
         case L_BRACKET: case R_BRACKET: 
@@ -313,7 +319,6 @@ double NodeCalculate(double leftTree, double rightTree,
         case INSTR_END: case WHILE:
         case IN:        case OUT:
         case THEN:
-        case EQUAL: case NOT_EQUAL:
 
                         return 0;
 
@@ -332,6 +337,14 @@ bool canBeEvaluated(Node *node)
     
     if (node->type == EXP_TREE_NUMBER)   return true;
     if (node->type == EXP_TREE_VARIABLE) return false;
+
+    if (node->type == EXP_TREE_OPERATOR)
+    {
+        int oper = node->data.operatorNum;
+
+        if (oper == IF  || oper == WHILE ||
+            oper == OUT || oper == INSTR_END) return false;
+    }
 
     bool left  = canBeEvaluated(node->left);
     bool right = canBeEvaluated(node->right);

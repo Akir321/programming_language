@@ -3,6 +3,7 @@
 
 #include "tree_of_expressions.h"
 #include "html_logfile.h"
+#include "exp_tree_write.h"
 #include "tree_simplify.h"
 
 
@@ -47,6 +48,12 @@ int expTreeSimplifyConsts(Evaluator *eval, Node *node)
     
     if (!node)  return EXIT_SUCCESS;
 
+    /*LOG("I'm simplify consts\n");
+    dumpNode(eval, node, LogFile);
+    LOG("EV_L = %d\n", EV_L);
+    LOG("EV_R = %d\n", EV_R);
+    LOG("EV_L && EV_R = %d\n\n", EV_L && EV_R);*/
+
     if (node->type == EXP_TREE_NUMBER)   return EXIT_SUCCESS;
     if (node->type == EXP_TREE_VARIABLE) return EXIT_SUCCESS;
     if (node->type == EXP_TREE_NOTHING)  return EXIT_FAILURE;
@@ -54,6 +61,14 @@ int expTreeSimplifyConsts(Evaluator *eval, Node *node)
     int count = 0;
     count += expTreeSimplifyConsts(eval, node->left);
     count += expTreeSimplifyConsts(eval, node->right);
+
+    if (node->type == EXP_TREE_OPERATOR)
+    {
+        int oper = node->data.operatorNum;
+
+        if (oper == IF  || oper == WHILE ||
+            oper == OUT || oper == INSTR_END) return EXIT_SUCCESS;
+    }
 
     if (EV_L && EV_R)
     {
@@ -103,9 +118,15 @@ int tryNodeSimplify(Evaluator *eval, Node *node)
 
     switch (node->data.operatorNum)
     {
-        case ADD: case SUB:
+        case ADD:
         {
             if (casePlus0(eval, node, node->left,  node->right))  return CHANGED;
+            if (casePlus0(eval, node, node->right, node->left))   return CHANGED;
+
+            return EXIT_SUCCESS;
+        }
+        case SUB:
+        {
             if (casePlus0(eval, node, node->right, node->left))   return CHANGED;
 
             return EXIT_SUCCESS;
@@ -135,7 +156,7 @@ int tryNodeSimplify(Evaluator *eval, Node *node)
         case OPEN_F: case CLOSE_F:
         case OUT:    case IN:
         case EQUAL:  case NOT_EQUAL:
-        case THEN:
+        case THEN:   case SQRT:
         
             return EXIT_SUCCESS;
 

@@ -76,6 +76,7 @@ int printTreeOperator(ExpTreeOperators operatorType, FILE *f)
         case POW:    OPER("pow");
         case SIN:    OPER("sin");
         case COS:    OPER("cos");
+        case SQRT:   OPER("sqrt");
 
         case L_BRACKET: OPER("(");
         case R_BRACKET: OPER(")");
@@ -176,6 +177,7 @@ int printTreeOperatorSymbol(ExpTreeOperators operatorType, FILE *f)
         case POW:    OPER("^");
         case SIN:    OPER("sin");
         case COS:    OPER("cos");
+        case SQRT:   OPER("sqrt");
 
         case L_BRACKET: OPER("(");
         case R_BRACKET: OPER(")");
@@ -306,6 +308,7 @@ int expTreeOperatorPriority(ExpTreeOperators oper)
 
         case LN:  case LOGAR:
         case SIN: case COS:
+        case SQRT:
             return PR_UNARY;
 
         case POW:

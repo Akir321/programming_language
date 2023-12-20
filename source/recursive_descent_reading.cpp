@@ -30,7 +30,7 @@
 #define NEW_NODE(type, value, left, right)                     \
     createNode(type, createNodeData(type, value), left, right)
 
-#define VAR_NODE(value)  NEW_NODE(EXP_TREE_NUMBER, value, NULL, NULL)
+#define NUM_NODE(value)  NEW_NODE(EXP_TREE_NUMBER, value, NULL, NULL)
 
 #define cL     copy      (eval, node->left)
 #define cR     copy      (eval, node->right)
@@ -42,21 +42,23 @@
 #define dL       derivative(eval, node->left)
 #define dR       derivative(eval, node->right)
 
-#define _ADD(left, right) NEW_NODE(EXP_TREE_OPERATOR, ADD, left, right)
+#define _ADD(left, right) NEW_NODE(EXP_TREE_OPERATOR, ADD,  left, right)
 
-#define _SUB(left, right) NEW_NODE(EXP_TREE_OPERATOR, SUB, left, right)
+#define _SUB(left, right) NEW_NODE(EXP_TREE_OPERATOR, SUB,  left, right)
 
-#define _MUL(left, right) NEW_NODE(EXP_TREE_OPERATOR, MUL, left, right)
+#define _MUL(left, right) NEW_NODE(EXP_TREE_OPERATOR, MUL,  left, right)
 
-#define _DIV(left, right) NEW_NODE(EXP_TREE_OPERATOR, DIV, left, right)
+#define _DIV(left, right) NEW_NODE(EXP_TREE_OPERATOR, DIV,  left, right)
 
-#define _LN(       right) NEW_NODE(EXP_TREE_OPERATOR, LN,  NULL, right)
+#define _LN(       right) NEW_NODE(EXP_TREE_OPERATOR, LN,   NULL, right)
 
-#define _POW(left, right) NEW_NODE(EXP_TREE_OPERATOR, POW, left, right)
+#define _POW(left, right) NEW_NODE(EXP_TREE_OPERATOR, POW,  left, right)
 
-#define _SIN(      right) NEW_NODE(EXP_TREE_OPERATOR, SIN, NULL, right)
+#define _SIN(      right) NEW_NODE(EXP_TREE_OPERATOR, SIN,  NULL, right)
 
-#define _COS(      right) NEW_NODE(EXP_TREE_OPERATOR, COS, NULL, right)
+#define _COS(      right) NEW_NODE(EXP_TREE_OPERATOR, COS,  NULL, right)
+
+#define _SQRT(     right) NEW_NODE(EXP_TREE_OPERATOR, SQRT, NULL, right)
 
 
 int readTreeFromFileRecursive(Evaluator *eval, const char *fileName)
@@ -306,6 +308,7 @@ ExpTreeOperators getWordOperator(const char *word)
     COMPARE_WORD("cos",      COS);
     COMPARE_WORD("log",      LOGAR);
     COMPARE_WORD("ln",       LN);
+    COMPARE_WORD("koreshok", SQRT);
     COMPARE_WORD("koli",     IF);
     COMPARE_WORD("pokuda",   WHILE);
     COMPARE_WORD("vvedi",    IN);
@@ -411,7 +414,7 @@ Node *getOp(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *val = NULL;
 
@@ -444,7 +447,7 @@ Node *getMultOp(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *val = NULL;
 
@@ -473,7 +476,7 @@ Node *getIfWhile(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     if (TOKEN_IS_OPER && (TOKEN_IS(IF) || TOKEN_IS(WHILE)))
     {
@@ -526,7 +529,7 @@ Node *getA(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *var = getId(tokenArray, arrPosition);
     if (var == PtrPoison) SYNTAX_ERROR;
@@ -550,7 +553,7 @@ Node *getB(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *val = getE(tokenArray, arrPosition);
 
@@ -573,7 +576,7 @@ Node *getE(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *val = getT(tokenArray, arrPosition);
 
@@ -599,7 +602,7 @@ Node *getT(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *val = getPow(tokenArray, arrPosition);
 
@@ -625,7 +628,7 @@ Node *getPow(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Node *base = getP(tokenArray, arrPosition);
 
@@ -648,7 +651,7 @@ Node *getP(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     if (TOKEN_IS_OPER && TOKEN_IS(L_BRACKET))
     {
@@ -672,7 +675,7 @@ Node *getU(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Token *curToken = tokenArray + *arrPosition;
 
@@ -697,9 +700,10 @@ Node *getU(Token *tokenArray, int *arrPosition)
 
         switch (oper)
         {
-            case SIN:   return _SIN(val);
-            case COS:   return _COS(val);
-            case LN:    return _LN (val);
+            case SIN:   return _SIN (val);
+            case COS:   return _COS (val);
+            case LN:    return _LN  (val);
+            case SQRT:  return _SQRT(val);
         
             default:    syntaxError(curToken, *arrPosition);
                         return PtrPoison;
@@ -714,7 +718,7 @@ Node *getN(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Token *curToken = tokenArray + *arrPosition;
 
@@ -742,7 +746,7 @@ Node *getN(Token *tokenArray, int *arrPosition)
             return val;
         }
 
-        return _SUB(NULL, val);
+        return _SUB(NUM_NODE(0), val);
     }
 
     if (TOKEN_IS_NULL) return NULL;
@@ -756,7 +760,7 @@ Node *getId(Token *tokenArray, int *arrPosition)
     assert(tokenArray);
     assert(arrPosition);
 
-    LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
+    //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
     Token *curToken = tokenArray + *arrPosition;
 

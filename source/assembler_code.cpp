@@ -55,8 +55,8 @@ int convertToAssemblyCode(Evaluator *eval, Node *root, FILE *f)
     assert(eval);
     assert(f);
 
-    dumpNode(eval, root, LogFile);
-    LOG("\n");
+    //dumpNode(eval, root, LogFile);
+    //LOG("\n");
 
     if (!root) return EXIT_SUCCESS;
 
@@ -98,7 +98,7 @@ int printAssemblyOperator(Evaluator *eval, Node *root, FILE *f)
                                     
         case ADD: case SUB: case MUL: case DIV:
         case POW: case LN:  case LOGAR:
-        case SIN: case COS:         
+        case SIN: case COS: case SQRT:       
         case OUT:                   convertToAssemblyCode(eval, root->left,  f);
                                     convertToAssemblyCode(eval, root->right, f);
                                     printTreeOperator(root->data.operatorNum, f);
@@ -194,7 +194,7 @@ int printCaseIf(Evaluator *eval, Node *root, FILE *f)
     {
          printJmpOperator(node->data.operatorNum, prefix, ifNumber, f);
     }
-    else fprintf(f, "jne :%s%d\n\n", prefix, ifNumber);
+    else fprintf(f, "jn :%s%d\n\n", prefix, ifNumber);
     
     ifStaticNumber++;
     convertToAssemblyCode(eval, root->right,  f);
@@ -227,7 +227,7 @@ int printCaseWhile(Evaluator *eval, Node *root, FILE *f)
     {
          printJmpOperator(node->data.operatorNum, prefixEnd, whileNumber, f);
     }
-    else fprintf(f, "jne :%s%d\n\n", prefixEnd, whileNumber);
+    else fprintf(f, "jn :%s%d\n\n", prefixEnd, whileNumber);
     
     whileStaticNumber++;
     convertToAssemblyCode(eval, root->right,  f);
@@ -251,13 +251,13 @@ int printJmpOperator(int oper, const char *labelPrefix, int labelNum,  FILE *f)
         case BELOW:     fprintf(f, "jae :%s%d\n\n", labelPrefix, labelNum);
                         break;
 
-        case EQUAL:     fprintf(f, "jne :%s%d\n\n", labelPrefix, labelNum);
+        case EQUAL:     fprintf(f, "jn :%s%d\n\n", labelPrefix, labelNum);
                         break;
 
-        case NOT_EQUAL: fprintf(f, "je  :%s%d\n\n", labelPrefix, labelNum);
+        case NOT_EQUAL: fprintf(f, "je :%s%d\n\n", labelPrefix, labelNum);
                         break;
 
-        default:        fprintf(f, "jne :%s%d\n\n", labelPrefix, labelNum);
+        default:        fprintf(f, "jn :%s%d\n\n", labelPrefix, labelNum);
                         break;
     }
 

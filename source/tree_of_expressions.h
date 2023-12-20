@@ -38,6 +38,7 @@ enum ExpTreeOperators
     THEN      = 22,
     EQUAL     = 23,
     NOT_EQUAL = 24,
+    SQRT      = 25,
 };
 
 union ExpTreeData

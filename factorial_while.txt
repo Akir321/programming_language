@@ -1,0 +1,13 @@
+
+
+vvedi n slavsya_rus
+a prisvoy 1 slavsya_rus
+fact prisvoy 1 slavsya_rus
+
+pokuda a menshe n togda
+pole_polushko_nachnis
+    a prisvoy a plus 1 slavsya_rus
+    fact prisvoy fact umnozhit a slavsya_rus
+pole_polushko_zakonchis
+
+vivedi(fact) slavsya_rus

@@ -7,13 +7,23 @@
 #include "tree_simplify.h"
 #include "assembler_code.h"
 
-const char *fileName = "square_solver.txt";
+//const char *fileName = "factorial_while.txt";
 
-int main()
+int main(int argc, const char *argv[])
 {
+    const char *fileInName  = NULL;
+
+    if (argc == 1)
+    {
+        printf("ERROR: file name not given\n");
+        return 0;
+    }
+
+    fileInName = argv[1];
+
     Evaluator eval = {};
     
-    readTreeFromFileRecursive(&eval, fileName);
+    readTreeFromFileRecursive(&eval, fileInName);
     treeGraphicDump(&eval, eval.tree.root);
     if (eval.tree.root == PtrPoison)
     {
@@ -24,7 +34,10 @@ int main()
     expTreeSimplify(&eval, eval.tree.root);
     treeGraphicDump(&eval, eval.tree.root);
 
-    createAssemblerCodeFile(&eval, fileName);
+    createAssemblerCodeFile(&eval, fileInName);
 
     evaluatorDtor(&eval);
 }
+
+//.\test_compiler.exe factorial_while.txt
+//.\test_compiler.exe square_solver.txt

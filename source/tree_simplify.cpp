@@ -157,6 +157,7 @@ int tryNodeSimplify(Evaluator *eval, Node *node)
         case OUT:    case IN:
         case EQUAL:  case NOT_EQUAL:
         case THEN:   case SQRT:
+        case NEW_VAR:
         
             return EXIT_SUCCESS;
 

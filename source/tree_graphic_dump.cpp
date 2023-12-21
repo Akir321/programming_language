@@ -160,6 +160,12 @@ int dotWriteNodes(Evaluator *eval, Node *node, FILE *f, int rank)
             dotWrite("fillcolor = \"#b39ddb\"];\n");
             break;
 
+        case EXP_TREE_IDENTIF:
+            dotWrite("node%p [label = \"%s\", rank = %d, ", 
+                      node, eval->names.table[node->data.idNum].name, rank);
+            dotWrite("fillcolor = \"blue\"];\n");
+            break;
+
         default:
             dotWrite("node%p [label = \"ERROR\", rank = %d, ", node, rank);
             dotWrite("fillcolor = \"#d50000\"];\n");

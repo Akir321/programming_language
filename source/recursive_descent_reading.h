@@ -40,23 +40,25 @@ int printTokenArray(Token *tokenArray, FILE *f);
 
 Node *getG(Evaluator *eval, const char *str);
 
-Node *getIfWhile(Token *tokenArray, int *arrPosition);
+Node *getIfWhile(Evaluator *eval, Token *tokenArray, int *arrPosition);
 
-Node *getInOut  (Token *tokenArray, int *arrPosition);
+Node *getInOut  (Evaluator *eval, Token *tokenArray, int *arrPosition);
 
-Node *getMultOp (Token *tokenArray, int *arrPosition);
+Node *getMultOp (Evaluator *eval, Token *tokenArray, int *arrPosition);
 
-Node *getOp(Token *tokenArray, int *arrPosition);
-Node *getA (Token *tokenArray, int *arrPosition);
+Node *getOp(Evaluator *eval, Token *tokenArray, int *arrPosition);
+Node *getA (Evaluator *eval, Token *tokenArray, int *arrPosition);
 
-Node *getB(Token *tokenArray, int *arrPosition);
-Node *getE(Token *tokenArray, int *arrPosition);
-Node *getT(Token *tokenArray, int *arrPosition);
-Node *getP(Token *tokenArray, int *arrPosition);
-Node *getU(Token *tokenArray, int *arrPosition);
-Node *getN(Token *tokenArray, int *arrPosition);
-Node *getPow(Token *tokenArray, int *arrPosition);
-Node *getId(Token *tokenArray, int *arrPosition);
+Node *getB  (Evaluator *eval, Token *tokenArray, int *arrPosition);
+Node *getE  (Evaluator *eval, Token *tokenArray, int *arrPosition);
+Node *getT  (Evaluator *eval, Token *tokenArray, int *arrPosition);
+Node *getP  (Evaluator *eval, Token *tokenArray, int *arrPosition);
+Node *getU  (Evaluator *eval, Token *tokenArray, int *arrPosition);
+Node *getN  (Evaluator *eval, Token *tokenArray, int *arrPosition);
+Node *getPow(Evaluator *eval, Token *tokenArray, int *arrPosition);
+Node *getId (Evaluator *eval, Token *tokenArray, int *arrPosition);
+
+Node *getNewVar(Evaluator *eval, Token *tokenArray, int *arrPosition);
 
 int syntaxError(Token *token, int arrPosition);
 

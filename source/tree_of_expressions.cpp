@@ -36,6 +36,9 @@ ExpTreeData createNodeData(ExpTreeNodeType type, double value)
         case EXP_TREE_VARIABLE:     data.variableNum = (int) value;
                                     return data;
 
+        case EXP_TREE_IDENTIF:      data.idNum = (int)value;
+                                    return data;
+
         case EXP_TREE_NOTHING:      data.number = DataPoison;
                                     return data;
 
@@ -84,6 +87,7 @@ int nameTableCtor(NameTable *names)
     {
         names->table[i].value = DataPoison;
         names->table[i].name  = NULL;
+        names->table[i].type  = EXP_TREE_NOTHING;
     }
 
     return EXIT_SUCCESS;
@@ -96,6 +100,7 @@ int nameTableDtor(NameTable *names)
     for (size_t i = 0; i < NamesNumber; i++)
     {
         names->table[i].value = DataPoison;
+        names->table[i].type  = EXP_TREE_NOTHING;
 
         free(names->table[i].name);
         names->table[i].name = NULL;
@@ -318,7 +323,7 @@ double NodeCalculate(double leftTree, double rightTree,
         case OPEN_F:    case CLOSE_F:
         case INSTR_END: case WHILE:
         case IN:        case OUT:
-        case THEN:
+        case THEN:      case NEW_VAR:
 
                         return 0;
 

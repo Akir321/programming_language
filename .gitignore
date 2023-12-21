@@ -38,5 +38,9 @@
 # Logs
 *.html
 
+# Out files
+*assembler.txt
+*.bin
+
 
 TODO.txt

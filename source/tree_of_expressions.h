@@ -6,7 +6,8 @@ enum ExpTreeNodeType
     EXP_TREE_NOTHING  = 0,
     EXP_TREE_NUMBER   = 1,
     EXP_TREE_OPERATOR = 2,
-    EXP_TREE_VARIABLE = 3,
+    EXP_TREE_IDENTIF  = 3,
+    EXP_TREE_VARIABLE = 4,
 };
 
 #define ElemNumberFormat "%lg"
@@ -39,6 +40,7 @@ enum ExpTreeOperators
     EQUAL     = 23,
     NOT_EQUAL = 24,
     SQRT      = 25,
+    NEW_VAR   = 26,
 };
 
 union ExpTreeData
@@ -46,6 +48,7 @@ union ExpTreeData
     double           number;
     ExpTreeOperators operatorNum;
     int              variableNum;
+    int              idNum;
 };
 
 struct Node
@@ -61,8 +64,9 @@ const int NamesNumber = 10;
 
 struct Name 
 {
-    char *name;
-    double value;
+    char           *name;
+    ExpTreeNodeType type;
+    double          value;
 };
 
 struct NameTable

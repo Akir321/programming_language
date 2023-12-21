@@ -73,7 +73,12 @@ int convertToAssemblyCode(Evaluator *eval, Node *root, FILE *f)
                                 return EXIT_SUCCESS;
 
         case EXP_TREE_OPERATOR: return printAssemblyOperator(eval, root, f);
-    
+
+        case EXP_TREE_IDENTIF:  printf("ERROR: unknown identificator: %s\n", 
+                                        eval->names.table[root->data.idNum].name);
+                                return EXIT_FAILURE;
+
+
         default:                LOG("ERROR in %s(%d) in function %s: unknown Node type: %d\n",
                                     __FILE__, __LINE__ - 1, __func__, root->type);
                                 return EXIT_FAILURE;
@@ -124,7 +129,7 @@ int printAssemblyOperator(Evaluator *eval, Node *root, FILE *f)
 
         case OPEN_F:    case CLOSE_F:
         case R_BRACKET: case L_BRACKET:
-        case THEN:
+        case THEN:      case NEW_VAR:
         case NOT_OPER:
         default:                    LOG("ERROR in %s(%d) in function %s: unsupported operator: %d\n",
                                         __FILE__, __LINE__ - 1, __func__, root->data.operatorNum);

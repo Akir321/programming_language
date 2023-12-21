@@ -1,4 +1,7 @@
 
+perem n    slavsya_rus
+perem a    slavsya_rus
+perem fact slavsya_rus
 
 vvedi n slavsya_rus
 a prisvoy 1 slavsya_rus

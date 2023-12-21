@@ -33,6 +33,7 @@ int printNode(Evaluator *eval, Node *node, FILE *f)
             return printTreeOperator(node->data.operatorNum, f);
 
         case EXP_TREE_VARIABLE:
+        case EXP_TREE_IDENTIF:
             return printTreeVariable(eval, node, f);
 
         default:
@@ -100,6 +101,8 @@ int printTreeOperator(ExpTreeOperators operatorType, FILE *f)
 
         case IN:    OPER("in");
         case OUT:   OPER("out");
+
+        case NEW_VAR: OPER("var");
         
         case NOT_OPER:
         default:
@@ -128,6 +131,7 @@ int printNodeSymbol(Evaluator *eval, Node *node, FILE *f)
             return printTreeOperatorSymbol(node->data.operatorNum, f);
 
         case EXP_TREE_VARIABLE:
+        case EXP_TREE_IDENTIF:
             return printTreeVariable(eval, node, f);
 
         default:
@@ -142,13 +146,15 @@ int printTreeVariable(Evaluator *eval, Node *node, FILE *f)
     assert(node);
     assert(f);
 
-    int nameIndex = node->data.variableNum;
+    int nameIndex = 0;
+    if (node->type == EXP_TREE_VARIABLE) nameIndex = node->data.variableNum;
+    if (node->type == EXP_TREE_IDENTIF)  nameIndex = node->data.idNum;
 
     if (!eval)  fprintf(f, "<eval = null>");
 
     else if (0 <= nameIndex && nameIndex < eval->names.count)
     {
-        fprintf(f, "%s", eval->names.table[node->data.variableNum].name);
+        fprintf(f, "%s", eval->names.table[nameIndex].name);
     }
 
     else      
@@ -201,6 +207,8 @@ int printTreeOperatorSymbol(ExpTreeOperators operatorType, FILE *f)
 
         case IN:    OPER("in");
         case OUT:   OPER("out");
+
+        case NEW_VAR: OPER("var");
 
         case NOT_OPER:
         default:
@@ -323,6 +331,7 @@ int expTreeOperatorPriority(ExpTreeOperators oper)
         case WHILE: case THEN:
         case IN: case OUT:
         case EQUAL: case NOT_EQUAL:
+        case NEW_VAR:
         default:
             return PR_UNKNOWN;
     }

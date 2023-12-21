@@ -229,24 +229,24 @@ int caseNumber(Token *token, ReadBuf *readBuf)
     assert(readBuf);
     assert(readBuf->str);
 
-    LOG("position  = %d\n", readBuf->position);
-    LOG("str (before strtod) = %p\n", readBuf->str);
+    //LOG("position  = %d\n", readBuf->position);
+    //LOG("str (before strtod) = %p\n", readBuf->str);
     char *end = readBuf->str + readBuf->position;
     double value = strtod(readBuf->str + readBuf->position, &end);
 
-    LOG("str (after strtod) = %p\n", readBuf->str);
-    LOG("caseNumber value = %lg\n", value);
-    LOG("position  = %d\n", readBuf->position);
-    LOG("buf + pos = %p, end = %p\n", readBuf->str + readBuf->position, end);
+    //LOG("str (after strtod) = %p\n", readBuf->str);
+    //LOG("caseNumber value = %lg\n", value);
+    //LOG("position  = %d\n", readBuf->position);
+    //LOG("buf + pos = %p, end = %p\n", readBuf->str + readBuf->position, end);
 
     SET_TOKEN(EXP_TREE_NUMBER, value);
 
     int shift = (int)(end - readBuf->str - readBuf->position) / sizeof(char);
-    LOG("shift = %d\n", shift);
+    //LOG("shift = %d\n", shift);
 
     readBuf->linePosition += shift;
     readBuf->position     += shift;
-    LOG("new position  = %d\n", readBuf->position);
+    //LOG("new position  = %d\n", readBuf->position);
 
     return EXIT_SUCCESS;
 }
@@ -284,7 +284,7 @@ int caseLetter(Evaluator *eval, Token *token, ReadBuf *readBuf)
 
         free(word);
 
-        SET_TOKEN(EXP_TREE_VARIABLE, index);
+        SET_TOKEN(EXP_TREE_IDENTIF, index);
         return EXIT_SUCCESS;
     }
     
@@ -325,6 +325,8 @@ ExpTreeOperators getWordOperator(const char *word)
     COMPARE_WORD("ravno",    EQUAL);
     COMPARE_WORD("neravno",  NOT_EQUAL);
 
+    COMPARE_WORD("perem",    NEW_VAR);
+
     COMPARE_WORD("pole_polushko_nachnis",   OPEN_F);
     COMPARE_WORD("pole_polushko_zakonchis", CLOSE_F);
 
@@ -359,6 +361,10 @@ int printTokenArray(Token *tokenArray, FILE *f)
             case EXP_TREE_VARIABLE: 
                 fprintf(f, " [%d] var%d\n", i, tokenArray[i].data.variableNum);
                 break;
+
+            case EXP_TREE_IDENTIF: 
+                fprintf(f, " [%d] id%d\n", i, tokenArray[i].data.variableNum);
+                break;
             
             case EXP_TREE_NOTHING:
                 break;
@@ -384,7 +390,7 @@ Node *getG(Evaluator *eval, const char *str)
 
     int arrPosition = 0;
 
-    Node *val = getMultOp(tokenArray, &arrPosition);
+    Node *val = getMultOp(eval, tokenArray, &arrPosition);
 
     if (tokenArray[arrPosition].type != EXP_TREE_NOTHING) syntaxError(tokenArray + arrPosition, arrPosition);
 
@@ -401,15 +407,15 @@ Node *getG(Evaluator *eval, const char *str)
 #define TOKEN_IS_NUM  (tokenArray[*arrPosition].type == EXP_TREE_NUMBER)
 #define TOKEN_IS_OPER (tokenArray[*arrPosition].type == EXP_TREE_OPERATOR)
 #define TOKEN_IS_NULL (tokenArray[*arrPosition].type == EXP_TREE_NOTHING)
-#define TOKEN_IS_VAR  (tokenArray[*arrPosition].type == EXP_TREE_VARIABLE)
+#define TOKEN_IS_VAR  ((int)eval->names.table[tokenArray[*arrPosition].data.variableNum].value == EXP_TREE_VARIABLE)
+#define TOKEN_IS_ID   (tokenArray[*arrPosition].type == EXP_TREE_IDENTIF)
 
 #define TOKEN_IS(oper) (tokenArray[*arrPosition].data.operatorNum == oper)
 
 #define TOKEN_PRIORITY_IS(oper)\
     (expTreeOperatorPriority(curToken->data.operatorNum) == oper)
 
-
-Node *getOp(Token *tokenArray, int *arrPosition)
+Node *getOp(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -421,7 +427,7 @@ Node *getOp(Token *tokenArray, int *arrPosition)
     if (TOKEN_IS_OPER && TOKEN_IS(OPEN_F))
     {
         (*arrPosition)++;
-        val = getMultOp(tokenArray, arrPosition);
+        val = getMultOp(eval, tokenArray, arrPosition);
 
         syntax_assert(TOKEN_IS_OPER && TOKEN_IS(CLOSE_F));
         (*arrPosition)++;
@@ -429,20 +435,23 @@ Node *getOp(Token *tokenArray, int *arrPosition)
         return val;
     }
 
-    val = getIfWhile(tokenArray, arrPosition);
+    val = getNewVar(eval, tokenArray, arrPosition);
     if (val) return val;
 
-    val = getInOut(tokenArray, arrPosition);
+    val = getIfWhile(eval, tokenArray, arrPosition);
     if (val) return val;
 
-    val = getA(tokenArray, arrPosition);
+    val = getInOut(eval, tokenArray, arrPosition);
     if (val) return val;
 
-    syntaxError(tokenArray + *arrPosition, *arrPosition);
+    val = getA(eval, tokenArray, arrPosition);
+    if (val) return val;
+
+    SYNTAX_ERROR;
     return PtrPoison;
 }
 
-Node *getMultOp(Token *tokenArray, int *arrPosition)
+Node *getMultOp(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -452,7 +461,7 @@ Node *getMultOp(Token *tokenArray, int *arrPosition)
     Node *val = NULL;
 
     
-    val = getOp(tokenArray, arrPosition);
+    val = getOp(eval, tokenArray, arrPosition);
     val = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val, NULL);
 
     Node *curVal = val;
@@ -461,8 +470,8 @@ Node *getMultOp(Token *tokenArray, int *arrPosition)
 
     while (!((TOKEN_IS_OPER && TOKEN_IS(CLOSE_F)) || TOKEN_IS_NULL))
     {
-        Node *val2 = getOp(tokenArray, arrPosition);
-        if (oldPos == *arrPosition) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
+        Node *val2 = getOp(eval, tokenArray, arrPosition);
+        if (oldPos == *arrPosition) SYNTAX_ERROR;
 
         curVal->right = NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, val2, NULL);
         curVal = curVal->right;
@@ -471,7 +480,7 @@ Node *getMultOp(Token *tokenArray, int *arrPosition)
     return val;
 }
 
-Node *getIfWhile(Token *tokenArray, int *arrPosition)
+Node *getIfWhile(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -483,14 +492,14 @@ Node *getIfWhile(Token *tokenArray, int *arrPosition)
         int oper = tokenArray[*arrPosition].data.operatorNum;
         (*arrPosition)++;
 
-        Node *val = getB(tokenArray, arrPosition);
-        if (!val) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
+        Node *val = getB(eval, tokenArray, arrPosition);
+        if (!val) SYNTAX_ERROR;
 
         syntax_assert(TOKEN_IS_OPER && TOKEN_IS(THEN));
         (*arrPosition)++;
 
-        Node *val2 = getOp(tokenArray, arrPosition);
-        if (!val2) { syntaxError(tokenArray + *arrPosition, *arrPosition); return PtrPoison; }
+        Node *val2 = getOp(eval, tokenArray, arrPosition);
+        if (!val2) SYNTAX_ERROR;
 
         return NEW_NODE(EXP_TREE_OPERATOR, oper, val, val2);
     }
@@ -498,7 +507,7 @@ Node *getIfWhile(Token *tokenArray, int *arrPosition)
     return NULL;
 }
 
-Node *getInOut(Token *tokenArray, int *arrPosition)
+Node *getInOut(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -510,8 +519,8 @@ Node *getInOut(Token *tokenArray, int *arrPosition)
 
         Node *val = NULL;
         
-        if (oper == IN)  val = getId(tokenArray, arrPosition);
-        if (oper == OUT) val = getE(tokenArray, arrPosition);
+        if (oper == IN)  val = getId(eval, tokenArray, arrPosition);
+        if (oper == OUT) val = getP(eval, tokenArray, arrPosition);
 
         if (val == PtrPoison) SYNTAX_ERROR;
 
@@ -524,20 +533,20 @@ Node *getInOut(Token *tokenArray, int *arrPosition)
     return NULL;
 }
 
-Node *getA(Token *tokenArray, int *arrPosition)
+Node *getA(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
 
     //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
-    Node *var = getId(tokenArray, arrPosition);
+    Node *var = getId(eval, tokenArray, arrPosition);
     if (var == PtrPoison) SYNTAX_ERROR;
 
     if (TOKEN_IS_OPER && TOKEN_IS(ASSIGN))
     {
         (*arrPosition)++;
-        Node *expression = getE(tokenArray, arrPosition);
+        Node *expression = getE(eval, tokenArray, arrPosition);
 
         syntax_assert(TOKEN_IS_OPER && TOKEN_IS(INSTR_END));
         (*arrPosition)++;
@@ -548,14 +557,14 @@ Node *getA(Token *tokenArray, int *arrPosition)
     return NULL;
 }
 
-Node *getB(Token *tokenArray, int *arrPosition)
+Node *getB(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
 
     //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
-    Node *val = getE(tokenArray, arrPosition);
+    Node *val = getE(eval, tokenArray, arrPosition);
 
     if (TOKEN_IS_OPER && (TOKEN_IS(BELOW) || TOKEN_IS(ABOVE) ||
                           TOKEN_IS(EQUAL) || TOKEN_IS(NOT_EQUAL)))
@@ -563,7 +572,7 @@ Node *getB(Token *tokenArray, int *arrPosition)
         int oper = tokenArray[*arrPosition].data.operatorNum;
         (*arrPosition)++;
 
-        Node *val2 = getE(tokenArray, arrPosition);
+        Node *val2 = getE(eval, tokenArray, arrPosition);
 
         val = NEW_NODE(EXP_TREE_OPERATOR, oper, val, val2);
     }
@@ -571,21 +580,21 @@ Node *getB(Token *tokenArray, int *arrPosition)
     return val;
 }
 
-Node *getE(Token *tokenArray, int *arrPosition)
+Node *getE(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
 
     //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
-    Node *val = getT(tokenArray, arrPosition);
+    Node *val = getT(eval, tokenArray, arrPosition);
 
     while (TOKEN_IS_OPER && (TOKEN_IS(ADD) || TOKEN_IS(SUB)))
     {
         int oper = tokenArray[*arrPosition].data.operatorNum;
         (*arrPosition)++;
 
-        Node *val2 = getT(tokenArray, arrPosition);
+        Node *val2 = getT(eval, tokenArray, arrPosition);
     
         switch (oper)
         {
@@ -597,21 +606,21 @@ Node *getE(Token *tokenArray, int *arrPosition)
     return val;
 }
 
-Node *getT(Token *tokenArray, int *arrPosition)
+Node *getT(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
 
     //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
-    Node *val = getPow(tokenArray, arrPosition);
+    Node *val = getPow(eval, tokenArray, arrPosition);
 
     while (TOKEN_IS_OPER && (TOKEN_IS(MUL) || TOKEN_IS(DIV)))
     {
         int oper = tokenArray[*arrPosition].data.operatorNum;
         (*arrPosition)++;
 
-        Node *val2 = getPow(tokenArray, arrPosition);
+        Node *val2 = getPow(eval, tokenArray, arrPosition);
 
         switch (oper)
         {
@@ -623,22 +632,21 @@ Node *getT(Token *tokenArray, int *arrPosition)
     return val;
 }
 
-Node *getPow(Token *tokenArray, int *arrPosition)
+Node *getPow(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
 
     //LOG("hi, i'm function %s\n  I'm currently on token Arr pos %d\n\n", __func__, *arrPosition);
 
-    Node *base = getP(tokenArray, arrPosition);
+    Node *base = getP(eval, tokenArray, arrPosition);
 
     if (TOKEN_IS_OPER && TOKEN_IS(POW))
     {
-        Token *curToken = tokenArray + *arrPosition;
         (*arrPosition)++;
 
-        Node *deg = getP(tokenArray, arrPosition);
-        if (!deg) { syntaxError(curToken, *arrPosition); return NULL; }
+        Node *deg = getP(eval, tokenArray, arrPosition);
+        if (!deg) SYNTAX_ERROR;
 
         return _POW(base, deg);
     }
@@ -646,7 +654,7 @@ Node *getPow(Token *tokenArray, int *arrPosition)
     return base;
 }
 
-Node *getP(Token *tokenArray, int *arrPosition)
+Node *getP(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -656,8 +664,8 @@ Node *getP(Token *tokenArray, int *arrPosition)
     if (TOKEN_IS_OPER && TOKEN_IS(L_BRACKET))
     {
         (*arrPosition)++;
-        Node *val = getE(tokenArray, arrPosition);
-        if (!val) syntaxError(tokenArray + *arrPosition, *arrPosition);
+        Node *val = getE(eval, tokenArray, arrPosition);
+        if (!val) SYNTAX_ERROR;
 
         syntax_assert(TOKEN_IS_OPER && TOKEN_IS(R_BRACKET));
         (*arrPosition)++;
@@ -666,11 +674,11 @@ Node *getP(Token *tokenArray, int *arrPosition)
     }
     else
     {
-        return getU(tokenArray, arrPosition);
+        return getU(eval, tokenArray, arrPosition);
     }
 }
 
-Node *getU(Token *tokenArray, int *arrPosition)
+Node *getU(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -685,9 +693,9 @@ Node *getU(Token *tokenArray, int *arrPosition)
         {
             (*arrPosition)++;
 
-            Node *val1 = getPow(tokenArray, arrPosition);
-            Node *val2 = getPow(tokenArray, arrPosition);
-            if (!val1 || !val2) { syntaxError(curToken, *arrPosition); return NULL; }
+            Node *val1 = getPow(eval, tokenArray, arrPosition);
+            Node *val2 = getPow(eval, tokenArray, arrPosition);
+            if (!val1 || !val2) SYNTAX_ERROR;
 
             return NEW_NODE(EXP_TREE_OPERATOR, LOGAR, val1, val2);
         }
@@ -695,8 +703,8 @@ Node *getU(Token *tokenArray, int *arrPosition)
         int oper = tokenArray[*arrPosition].data.operatorNum;
         (*arrPosition)++;
 
-        Node *val = getPow(tokenArray, arrPosition);
-        if (!val) { syntaxError(curToken, *arrPosition); return NULL; }
+        Node *val = getPow(eval, tokenArray, arrPosition);
+        if (!val) SYNTAX_ERROR;
 
         switch (oper)
         {
@@ -705,15 +713,14 @@ Node *getU(Token *tokenArray, int *arrPosition)
             case LN:    return _LN  (val);
             case SQRT:  return _SQRT(val);
         
-            default:    syntaxError(curToken, *arrPosition);
-                        return PtrPoison;
+            default:    SYNTAX_ERROR;
         }
     }
 
-    return getN(tokenArray, arrPosition);
+    return getN(eval, tokenArray, arrPosition);
 }
 
-Node *getN(Token *tokenArray, int *arrPosition)
+Node *getN(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -727,18 +734,18 @@ Node *getN(Token *tokenArray, int *arrPosition)
         double val = curToken->data.number;
         (*arrPosition)++;
 
-        return NEW_NODE(EXP_TREE_NUMBER, val, NULL, NULL);
+        return NUM_NODE(val);
     }
 
     if (TOKEN_IS_VAR)
     {
-        return getId(tokenArray, arrPosition);
+        return getId(eval, tokenArray, arrPosition);
     }
 
     if (TOKEN_IS_OPER && TOKEN_IS(SUB))
     {
         (*arrPosition)++;
-        Node *val = getP(tokenArray, arrPosition);
+        Node *val = getP(eval, tokenArray, arrPosition);
 
         if (val->type == EXP_TREE_NUMBER)
         {
@@ -751,11 +758,10 @@ Node *getN(Token *tokenArray, int *arrPosition)
 
     if (TOKEN_IS_NULL) return NULL;
     
-    syntaxError(curToken, *arrPosition);
-    return PtrPoison;
+    SYNTAX_ERROR;
 }
 
-Node *getId(Token *tokenArray, int *arrPosition)
+Node *getId(Evaluator *eval, Token *tokenArray, int *arrPosition)
 {
     assert(tokenArray);
     assert(arrPosition);
@@ -772,8 +778,40 @@ Node *getId(Token *tokenArray, int *arrPosition)
         return NEW_NODE(EXP_TREE_VARIABLE, index, NULL, NULL);
     }
 
-    syntaxError(curToken, *arrPosition);
-    return PtrPoison;
+    SYNTAX_ERROR;
+}
+
+#define SET_ID_TO_VAR nameTableSetValue(&eval->names,                                                   \
+                                         eval->names.table[(tokenArray[*arrPosition].data.idNum)].name, \
+                                         EXP_TREE_VARIABLE)
+
+Node *getNewVar(Evaluator *eval, Token *tokenArray, int *arrPosition)
+{
+    assert(tokenArray);
+    assert(arrPosition);
+
+    Token *curToken = tokenArray + *arrPosition;
+
+    if (TOKEN_IS_OPER && TOKEN_IS(NEW_VAR))
+    {
+        int oper = curToken->data.operatorNum;
+        (*arrPosition)++;
+
+        syntax_assert(TOKEN_IS_ID);
+
+        switch(oper)
+        {
+            case NEW_VAR:   SET_ID_TO_VAR;
+                            (*arrPosition)++;
+                            syntax_assert(TOKEN_IS_OPER && TOKEN_IS(INSTR_END));
+                            (*arrPosition)++;
+                            return NEW_NODE(EXP_TREE_OPERATOR, INSTR_END, NULL, NULL);
+
+            default:        SYNTAX_ERROR;
+        }
+    }
+
+    return NULL;
 }
 
 int syntaxError(Token *token, int arrPosition)

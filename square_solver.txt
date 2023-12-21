@@ -1,6 +1,8 @@
 
 
-
+perem a slavsya_rus
+perem b slavsya_rus
+perem c slavsya_rus
 
 vvedi a slavsya_rus
 vvedi b slavsya_rus
@@ -26,7 +28,9 @@ pole_polushko_zakonchis
 koli a neravno 0 togda
 pole_polushko_nachnis
 
+    perem D slavsya_rus
     D     prisvoy b umnozhit b minus 4 umnozhit a umnozhit c slavsya_rus
+    perem root0 slavsya_rus
     root0 prisvoy minus b delit (2 umnozhit a) slavsya_rus
 
     koli D menshe 0 togda vivedi(0) slavsya_rus
